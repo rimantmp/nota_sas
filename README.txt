@@ -7,9 +7,11 @@ pupuk bersubsidi. Ringan, dirancang untuk PC spek rendah (2 GB RAM).
 SYARAT
 ------
 - Windows (termasuk Windows 7)
-- Python 3.9 terpasang.
-  Unduh: https://www.python.org/downloads/release/python-3913/
+- Python 3.7 terpasang.
+  Unduh: https://www.python.org/downloads/release/python-379/
   Saat memasang, centang "Add Python to PATH".
+  (Versi Python lebih baru juga bisa; dependensi di requirements.txt dipilih
+   agar tetap jalan di Python 3.7.)
 
 CARA PAKAI (sekali saja)
 ------------------------

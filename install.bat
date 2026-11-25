@@ -5,16 +5,16 @@ echo ============================================
 echo   Instalasi Sistem Nota
 echo ============================================
 echo.
-echo [1/3] Membuat virtual environment (.venv) dengan Python 3.9 ...
-py -3.9 -m venv .venv
+echo [1/3] Membuat virtual environment (.venv) dengan Python 3.7 ...
+py -3.7 -m venv .venv
 if errorlevel 1 (
-  echo     Perintah "py -3.9" tidak tersedia, mencoba "python" ...
+  echo     Perintah "py -3.7" tidak tersedia, mencoba "python" ...
   python -m venv .venv
 )
 if not exist ".venv\Scripts\python.exe" (
   echo.
   echo GAGAL membuat .venv.
-  echo Pastikan Python 3.9 sudah terpasang ^(python.org/downloads/release/python-3913^).
+  echo Pastikan Python 3.7 sudah terpasang ^(python.org/downloads/release/python-379^).
   echo.
   pause
   exit /b 1
