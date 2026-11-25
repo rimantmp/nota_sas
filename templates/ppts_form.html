@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ "Ubah kios" if ppts else "Tambah kios" }}{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>{{ ("Ubah kios " ~ ppts.nama) if ppts else "Tambah kios" }}</h1>
+    <p>Isi data kios dan daftar kecamatannya, lalu tekan <b>Simpan</b>. Semua tersimpan sekaligus.</p>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('ppts_simpan') }}" id="form-kios" style="max-width:720px">
+  <input type="hidden" name="id" value="{{ ppts.id if ppts else '' }}">
+
+  <div class="card">
+    <h2><span class="step">1</span> Data kios</h2>
+    <div class="field">
+      <label for="nama">Nama kios</label>
+      <input type="text" id="nama" name="nama" value="{{ nama }}" autocomplete="off"
+             placeholder="Contoh: Surya Tani" required {% if not ppts %}autofocus{% endif %}>
+    </div>
+    <div class="field">
+      <label for="pj">Penanda tangan</label>
+      <input type="text" id="pj" name="penanggung_jawab" value="{{ pj }}" autocomplete="off"
+             placeholder="Contoh: Titus Rombo'" required>
+      <div class="help">Nama orang yang menandatangani nota di kolom PPTS.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span> Kecamatan yang dilayani</h2>
+    <p class="help" style="margin:-6px 0 14px">Saat membuat nota, kamu akan memilih salah satu kecamatan dari daftar ini.</p>
+
+    <label for="kec-baru" class="lbl">Tambah kecamatan</label>
+    <div class="kec-add">
+      <input type="text" id="kec-baru" autocomplete="off" placeholder="Ketik nama kecamatan, contoh: Mengkendek">
+      <button type="button" class="btn secondary" id="kec-tambah">Tambah</button>
+    </div>
+    <div class="help" id="kec-pesan" role="status" aria-live="polite"></div>
+
+    <ul class="kec-list" id="kec-list" aria-label="Daftar kecamatan">
+      {% for k in kecamatan %}
+      <li><span>{{ k }}</span><input type="hidden" name="kecamatan" value="{{ k }}">
+        <button type="button" class="btn ghost small kec-hapus">Hapus</button></li>
+      {% endfor %}
+    </ul>
+    <div class="kec-kosong" id="kec-kosong" {% if kecamatan %}hidden{% endif %}>
+      Belum ada kecamatan. Ketik nama kecamatan di atas lalu tekan <b>Tambah</b>.
+    </div>
+  </div>
+
+  <div class="actionbar">
+    <div class="summary"><span class="pill"><b id="kec-jml">{{ kecamatan|length }}</b> kecamatan</span></div>
+    <div class="actions">
+      <a href="{{ url_for('ppts_list') }}" class="btn secondary">Batal</a>
+      <button type="submit" class="btn">Simpan kios</button>
+    </div>
+  </div>
+</form>
+
+<script>
+(function () {
+  var input = document.getElementById("kec-baru");
+  var list = document.getElementById("kec-list");
+  var kosong = document.getElementById("kec-kosong");
+  var pesan = document.getElementById("kec-pesan");
+  var jml = document.getElementById("kec-jml");
+
+  function namaDiDaftar() {
+    return Array.prototype.map.call(list.querySelectorAll('input[name="kecamatan"]'), function (i) { return i.value.toLowerCase(); });
+  }
+  function perbarui() {
+    var n = list.children.length;
+    kosong.hidden = n > 0;
+    jml.textContent = n;
+  }
+  function tambah() {
+    var nama = input.value.replace(/\s+/g, " ").trim();
+    if (!nama) { pesan.textContent = "Ketik nama kecamatan dulu."; input.focus(); return false; }
+    if (namaDiDaftar().indexOf(nama.toLowerCase()) !== -1) {
+      pesan.textContent = "Kecamatan \"" + nama + "\" sudah ada di daftar."; input.select(); return false;
+    }
+    var li = document.createElement("li");
+    var span = document.createElement("span"); span.textContent = nama;
+    var hid = document.createElement("input"); hid.type = "hidden"; hid.name = "kecamatan"; hid.value = nama;
+    var btn = document.createElement("button"); btn.type = "button"; btn.className = "btn ghost small kec-hapus"; btn.textContent = "Hapus";
+    li.appendChild(span); li.appendChild(hid); li.appendChild(btn);
+    list.appendChild(li);
+    pesan.textContent = "\"" + nama + "\" ditambahkan.";
+    input.value = ""; input.focus();
+    perbarui();
+    return true;
+  }
+
+  document.getElementById("kec-tambah").addEventListener("click", tambah);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); tambah(); }   // Enter menambah, bukan menyimpan formulir
+  });
+  list.addEventListener("click", function (e) {
+    var b = e.target.closest(".kec-hapus");
+    if (!b) return;
+    var li = b.closest("li");
+    pesan.textContent = "\"" + li.querySelector("span").textContent + "\" dihapus dari daftar.";
+    li.remove(); perbarui(); input.focus();
+  });
+  // Kecamatan yang sudah diketik tapi lupa ditekan "Tambah" tetap ikut disimpan
+  document.getElementById("form-kios").addEventListener("submit", function () {
+    if (input.value.trim()) { tambah(); }
+  });
+  perbarui();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Buat Nota{% endblock %}
+
+{% macro pupuk_select(selected_id, daftar) %}
+<select name="pupuk_id" class="r-pupuk" aria-label="Jenis pupuk">
+  {% for p in daftar %}
+    <option value="{{ p.id }}" data-harga="{{ p.harga_per_ton }}"
+      {% if selected_id|string == p.id|string %}selected{% endif %}>{{ p.nama }} &middot; Rp {{ p.harga_per_ton|rupiah }}/ton</option>
+  {% endfor %}
+</select>
+{% endmacro %}
+
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>Buat Nota</h1>
+    <p>Pilih kios sekali, lalu isi satu baris per Nomor SO. Tekan <b>Enter</b> di kolom kuantum untuk lanjut ke baris berikutnya.</p>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('nota_baru') }}" id="form-nota">
+  <div class="card">
+    <h2>Tujuan &amp; pengangkutan</h2>
+    <div class="row3">
+      <div class="field">
+        <label for="ppts_id">PPTS / Kios</label>
+        <select id="ppts_id" name="ppts_id" required>
+          {% for s in daftar_ppts %}
+            <option value="{{ s.id }}" {% if shared.get('ppts_id')|string == s.id|string %}selected{% endif %}>{{ s.nama }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="kecamatan">Kecamatan</label>
+        <select id="kecamatan" name="kecamatan" required></select>
+        <div class="help" id="kec-help" hidden>Kios ini belum punya kecamatan. <a href="{{ url_for('ppts_list') }}">Tambahkan di PPTS / Kios</a>.</div>
+      </div>
+      <div class="field">
+        <label for="ekspeditur_id">Ekspeditur</label>
+        <select id="ekspeditur_id" name="ekspeditur_id" required>
+          {% for e in daftar_eksp %}
+            <option value="{{ e.id }}" {% if shared.get('ekspeditur_id')|string == e.id|string %}selected{% endif %}>{{ e.nama }} &middot; {{ e.no_pol }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Daftar nota</h2>
+      <button type="button" class="btn secondary small" id="tambah-baris">+ Tambah baris</button>
+    </div>
+    <div class="table-wrap">
+      <table class="rows">
+        <thead>
+          <tr>
+            <th class="no">#</th>
+            <th style="width:160px">Tanggal</th>
+            <th>Nomor SO</th>
+            <th style="width:240px">Jenis pupuk</th>
+            <th style="width:120px">Kuantum (ton)</th>
+            <th class="num" style="width:150px">Jumlah (Rp)</th>
+            <th style="width:44px" aria-label="Aksi"></th>
+          </tr>
+        </thead>
+        <tbody id="baris-body">
+          {% for b in baris %}
+          <tr class="baris">
+            <td class="no"></td>
+            <td><input type="date" name="tanggal" value="{{ b.tanggal or hari_ini }}" aria-label="Tanggal"></td>
+            <td><input type="text" name="nomor_so" value="{{ b.nomor_so }}" inputmode="numeric" autocomplete="off" aria-label="Nomor SO" placeholder="Nomor SO" {% if loop.first %}autofocus{% endif %}></td>
+            <td>{{ pupuk_select(b.pupuk_id, daftar_pupuk) }}</td>
+            <td><input type="number" name="kuantum" min="0" step="0.01" value="{{ b.kuantum }}" class="r-qty" aria-label="Kuantum (ton)" placeholder="0"></td>
+            <td class="num r-jumlah">Rp 0</td>
+            <td><button type="button" class="icon-btn r-hapus" aria-label="Hapus baris" title="Hapus baris">&times;</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="actionbar">
+    <div class="summary">
+      <span class="pill"><b id="jml-nota">0</b> nota</span>
+      <span class="pill">Total <b id="jml-total">Rp 0</b></span>
+    </div>
+    <div class="actions">
+      <a href="{{ url_for('nota_riwayat') }}" class="btn secondary">Lihat riwayat</a>
+      <button type="submit" class="btn" id="btn-simpan">Simpan &amp; cetak</button>
+    </div>
+  </div>
+</form>
+
+<template id="baris-template">
+  <tr class="baris">
+    <td class="no"></td>
+    <td><input type="date" name="tanggal" value="{{ hari_ini }}" aria-label="Tanggal"></td>
+    <td><input type="text" name="nomor_so" inputmode="numeric" autocomplete="off" aria-label="Nomor SO" placeholder="Nomor SO"></td>
+    <td>{{ pupuk_select('', daftar_pupuk) }}</td>
+    <td><input type="number" name="kuantum" min="0" step="0.01" class="r-qty" aria-label="Kuantum (ton)" placeholder="0"></td>
+    <td class="num r-jumlah">Rp 0</td>
+    <td><button type="button" class="icon-btn r-hapus" aria-label="Hapus baris" title="Hapus baris">&times;</button></td>
+  </tr>
+</template>
+
+<script>
+(function () {
+  var body = document.getElementById("baris-body");
+  var form = document.getElementById("form-nota");
+
+  function rows() { return Array.prototype.slice.call(body.querySelectorAll(".baris")); }
+  function rp(n) { return "Rp " + Math.round(n).toLocaleString("en-US"); }
+
+  function hitung() {
+    var total = 0, jumlahNota = 0;
+    rows().forEach(function (tr, i) {
+      tr.querySelector(".no").textContent = i + 1;
+      var sel = tr.querySelector(".r-pupuk");
+      var opt = sel.options[sel.selectedIndex];
+      var harga = opt ? Number(opt.getAttribute("data-harga")) : 0;
+      var qty = Number(tr.querySelector(".r-qty").value) || 0;
+      var so = tr.querySelector('input[name="nomor_so"]').value.trim();
+      var jml = harga * qty;
+      tr.querySelector(".r-jumlah").textContent = rp(jml);
+      if (so || qty) { jumlahNota += 1; total += jml; }
+    });
+    document.getElementById("jml-nota").textContent = jumlahNota;
+    document.getElementById("jml-total").textContent = rp(total);
+  }
+
+  function tambahBaris(salinDari) {
+    var tpl = document.getElementById("baris-template");
+    body.appendChild(tpl.content.cloneNode(true));
+    var all = rows(), baru = all[all.length - 1];
+    // salin tanggal & pupuk dari baris sebelumnya agar tidak mengetik ulang
+    if (salinDari) {
+      baru.querySelector('input[name="tanggal"]').value = salinDari.querySelector('input[name="tanggal"]').value;
+      baru.querySelector(".r-pupuk").value = salinDari.querySelector(".r-pupuk").value;
+    }
+    baru.querySelector('input[name="nomor_so"]').focus();
+    hitung();
+  }
+
+  body.addEventListener("input", hitung);
+  body.addEventListener("change", hitung);
+
+  body.addEventListener("click", function (e) {
+    if (!e.target.closest(".r-hapus")) return;
+    var tr = e.target.closest(".baris");
+    if (rows().length > 1) { tr.remove(); }
+    else {
+      tr.querySelector('input[name="nomor_so"]').value = "";
+      tr.querySelector(".r-qty").value = "";
+    }
+    hitung();
+  });
+
+  // Enter: Nomor SO -> kuantum; kuantum -> baris berikutnya (atau baris baru)
+  body.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var tr = e.target.closest(".baris");
+    if (!tr) return;
+    e.preventDefault();
+    if (e.target.classList.contains("r-qty")) {
+      var all = rows(), idx = all.indexOf(tr);
+      if (idx === all.length - 1) { tambahBaris(tr); }
+      else { all[idx + 1].querySelector('input[name="nomor_so"]').focus(); }
+    } else {
+      tr.querySelector(".r-qty").focus();
+    }
+  });
+
+  document.getElementById("tambah-baris").addEventListener("click", function () {
+    var all = rows();
+    tambahBaris(all[all.length - 1]);
+  });
+
+  // Kecamatan mengikuti PPTS terpilih
+  var kecMap = {{ kecamatan_map|tojson }};
+  var ppts = document.getElementById("ppts_id");
+  var kec = document.getElementById("kecamatan");
+  var kecHelp = document.getElementById("kec-help");
+  var preselect = {{ (shared.get('kecamatan') or '')|tojson }};
+  function isiKecamatan() {
+    var list = kecMap[ppts.value] || [];
+    kec.innerHTML = "";
+    kec.disabled = list.length === 0;
+    kecHelp.hidden = list.length !== 0;
+    list.forEach(function (nama) {
+      var o = document.createElement("option");
+      o.value = nama; o.textContent = nama;
+      if (nama === preselect) o.selected = true;
+      kec.appendChild(o);
+    });
+  }
+  ppts.addEventListener("change", function () { preselect = ""; isiKecamatan(); });
+  isiKecamatan();
+
+  // Cegah kirim ganda
+  var btn = document.getElementById("btn-simpan");
+  form.addEventListener("submit", function () { btn.disabled = true; btn.textContent = "Menyimpan..."; });
+
+  hitung();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Cetak Nota - CV Subur Anugerah Sejahtera</title>
+<style>
+  /* Tata letak meniru grid Excel "01.SURYA TANI.xlsx" (sheet ASLI-MEI)
+     sebagaimana tercetak oleh Microsoft Excel: kolom A-F, tinggi baris
+     Excel x 0.854 (skala fit-to-page), font Calibri. Semua ukuran dalam pt. */
+  :root { --brand:#00B0F0; --bar:#141413; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#e9ebef; color:#000; }
+
+  /* ---------- Bar layar (tidak ikut tercetak) ---------- */
+  .bar {
+    position: sticky; top:0; z-index:5; display:flex; gap:10px; align-items:center;
+    padding:12px 16px; background:#fff; border-bottom:1px solid #d1d5db;
+    font-family: Arial, "Segoe UI", sans-serif;
+  }
+  .bar .spacer { flex:1 1 auto; }
+  .bar .btn {
+    font:inherit; font-weight:700; cursor:pointer; min-height:40px; padding:9px 16px;
+    border-radius:8px; border:1px solid var(--bar); background:var(--bar); color:#fff;
+    text-decoration:none; display:inline-flex; align-items:center;
+  }
+  .bar .btn.secondary { background:#fff; color:var(--bar); }
+  .bar .count { color:#4b5563; font-size:13px; }
+  .tip { background:#fff; border-bottom:1px solid #d1d5db; padding:8px 16px; font:12px Arial, sans-serif; color:#4b5563; }
+  .tip b { color:#15181c; }
+
+  /* Lembar pratinjau di layar menyerupai kertas A4 dengan margin 1 inci */
+  .sheet { width:595pt; margin:16px auto; padding:72pt; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.15); }
+
+  /* ---------- Nota (grid Excel) ---------- */
+  table.nota {
+    width:451pt; table-layout:fixed; border-collapse:collapse;
+    border:0.75pt solid #000; margin:0 0 12.81pt;
+    font-family: Calibri, Carlito, "Segoe UI", Arial, sans-serif;
+    color:#000; background:#fff;
+    page-break-inside:avoid; break-inside:avoid;
+  }
+  table.nota td {
+    padding:0 2.3pt; font-size:10.54pt; line-height:1;
+    white-space:nowrap; overflow:hidden; vertical-align:middle;
+  }
+  /* tinggi baris (pt) = tinggi baris Excel x 0.854 */
+  table.nota tr.r1  { height:17.93pt; }
+  table.nota tr.rs  { height:13.45pt; }   /* baris standar 15.75pt */
+  table.nota tr.r4  { height:14.09pt; }
+  table.nota tr.r5  { height:16.65pt; }
+  table.nota tr.rn  { height:80.70pt; }   /* blok nama: 6 baris digabung */
+  table.nota tr.rn td { padding-bottom:1pt; }
+  table.nota tr.rc  { height:12.81pt; }   /* baris catatan 15pt */
+
+  .c   { text-align:center; }
+  .b   { font-weight:700; }
+  .vb  { vertical-align:bottom !important; }
+  .company { color:var(--brand); font-size:14.13pt; font-weight:700; text-decoration:underline; text-underline-offset:2.4pt; }
+  table.nota td.sub { font-size:12.34pt; font-weight:700; padding-bottom:2.2pt; }
+  .dbl { border-bottom:2.5pt double #000; }
+  .g   { border:0.75pt solid #000; }        /* sel tabel bergaris */
+  .top { border-top:0.75pt solid #000; }
+  .u   { text-decoration:underline; }
+
+  /* Format akuntansi Excel: "Rp" rata kiri, angka rata kanan */
+  td.amt { padding:0 4.6pt 0 5.6pt !important; text-align:right; }
+  td.amt .rp { float:left; }
+
+  /* Baris catatan */
+  table.nota td.cat { font-size:9.70pt; position:relative; }
+  td.cat .pt { position:absolute; top:50%; transform:translateY(-50%); }
+
+  @media print {
+    @page { size: A4 portrait; margin: 1in; }
+    html, body { background:#fff; }
+    .no-print { display:none !important; }
+    .sheet { width:auto; margin:0; padding:0; box-shadow:none; }
+    table.nota:nth-of-type(2n) { margin-bottom:0; }
+    table.nota:nth-of-type(2n):not(:last-child) { page-break-after:always; break-after:page; }
+  }
+</style>
+</head>
+<body>
+<div class="bar no-print">
+  <button type="button" class="btn" onclick="window.print()">Cetak</button>
+  <a href="{{ url_for('nota_riwayat') }}" class="btn secondary">Kembali</a>
+  <span class="spacer"></span>
+  <span class="count">{{ notas|length }} nota</span>
+</div>
+<div class="tip no-print">
+  Saat mencetak: kertas <b>A4</b>, <b>Margins = Default</b>, <b>Scale = Default (100)</b>, dan <b>matikan "Headers and footers"</b>.
+</div>
+
+<div class="sheet">
+  {% for n in notas %}
+  <table class="nota">
+    <colgroup>
+      <col style="width:63pt"><col style="width:12.9pt"><col style="width:61.6pt">
+      <col style="width:78.8pt"><col style="width:80.1pt"><col style="width:154.6pt">
+    </colgroup>
+    <tr class="r1"><td colspan="6" class="c"><span class="company">{{ n.nama_perusahaan }}</span></td></tr>
+    <tr class="rs"><td colspan="6" class="c">{{ n.alamat }}</td></tr>
+    <tr class="rs"><td colspan="6" class="c">{{ n.kota }}</td></tr>
+    <tr class="r4"><td colspan="6" class="c b dbl">{{ n.judul_dokumen }}</td></tr>
+    <tr class="r5"><td colspan="6" class="c sub vb">{{ n.subjudul }}</td></tr>
+    <tr class="rs"><td>Kepada PPTS</td><td>:</td><td colspan="4">{{ n.ppts_nama }}</td></tr>
+    <tr class="rs"><td>Kecamatan</td><td>:</td><td colspan="4">{{ n.kecamatan }}</td></tr>
+    <tr class="rs"><td>Tanggal</td><td>:</td><td colspan="4">{{ n.tanggal_tampil }}</td></tr>
+    <tr class="rs"><td colspan="6"></td></tr>
+    <tr class="rs">
+      <td colspan="2" class="g c b">Nomor SO</td>
+      <td class="g c b">Jenis Pupuk</td>
+      <td class="g c b">Kuantum (Ton)</td>
+      <td class="g c b">Harga (Rp/Ton)</td>
+      <td class="g c b">Jumlah (Rp)</td>
+    </tr>
+    <tr class="rs">
+      <td colspan="2" class="g c b">{{ n.nomor_so }}</td>
+      <td class="g c b">{{ n.pupuk_nama }}</td>
+      <td class="g c b">{{ "%g"|format(n.kuantum) }}</td>
+      <td class="g b amt"><span class="rp">Rp</span>{{ n.harga_per_ton|rupiah }}</td>
+      <td class="g b amt"><span class="rp">Rp</span>{{ n.jumlah|rupiah }}</td>
+    </tr>
+    <tr class="rs">
+      <td colspan="2" class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td>
+    </tr>
+    <tr class="rs">
+      <td colspan="2" class="g"></td><td class="g"></td><td class="g"></td><td class="g"></td>
+      <td class="g b amt"><span class="rp">Rp</span>{{ n.jumlah|rupiah }}</td>
+    </tr>
+    <tr class="rs">
+      <td colspan="3" class="c b top">PPTS</td>
+      <td colspan="2" class="c b top">Ekspeditur</td>
+      <td class="c b top">PUD</td>
+    </tr>
+    <tr class="rs">
+      <td colspan="3" class="c b">{{ n.ppts_nama }}</td>
+      <td colspan="2" class="c b">NO. POL: {{ n.no_pol }}</td>
+      <td class="c b">{{ n.label_pud }}</td>
+    </tr>
+    <tr class="rn">
+      <td colspan="3" class="c b vb"><span class="u">{{ n.ppts_penandatangan }}</span></td>
+      <td colspan="2" class="c b vb"><span class="u">{{ n.ekspeditur_nama }}</span></td>
+      <td class="c b vb"><span class="u">{{ n.nama_pud }}</span></td>
+    </tr>
+    <tr class="rc">
+      <td colspan="6" class="cat">- Nota ini juga berlaku sebagai SURAT JALAN<span class="pt" style="left:268.5pt">1. PPTS</span><span class="pt" style="left:310.1pt">2. Ekspeditur</span><span class="pt" style="left:370pt">3. PUD</span></td>
+    </tr>
+    <tr class="rc">
+      <td colspan="6" class="cat">- Nota ini juga berlaku sebagai Bukti Penyerahterimaan</td>
+    </tr>
+  </table>
+  {% endfor %}
+</div>
+</body>
+</html>

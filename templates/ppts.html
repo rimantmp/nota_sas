@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}PPTS / Kios{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>PPTS / Kios</h1>
+    <p>Daftar kios penyalur. Setiap kios punya penanda tangan dan satu atau lebih kecamatan yang dilayani.</p>
+  </div>
+  <a href="{{ url_for('ppts_baru') }}" class="btn">+ Tambah kios</a>
+</div>
+
+<div class="card flush">
+  {% if rows %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Nama kios</th>
+          <th>Penanda tangan</th>
+          <th>Kecamatan yang dilayani</th>
+          <th class="w-act"><span hidden>Aksi</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        {% set daftar_kec = kec.get(r.id, []) %}
+        <tr>
+          <td><b>{{ r.nama }}</b></td>
+          <td>{{ r.penanggung_jawab }}</td>
+          <td class="wrap">
+            {% if daftar_kec %}
+              {{ daftar_kec|map(attribute='nama')|join(', ') }}
+            {% else %}
+              <span class="warn">Belum ada kecamatan. Nota untuk kios ini belum bisa dibuat.</span>
+            {% endif %}
+          </td>
+          <td class="w-act">
+            <div class="row-actions">
+              <a href="{{ url_for('ppts_ubah', pid=r.id) }}" class="btn secondary small">Ubah</a>
+              <form method="post" action="{{ url_for('ppts_hapus', pid=r.id) }}"
+                    onsubmit='return confirm({{ ("Hapus kios " ~ r.nama ~ "?\n\nNota yang sudah dibuat untuk kios ini tetap tersimpan.")|tojson }})'>
+                <button type="submit" class="btn ghost small">Hapus</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <strong>Belum ada kios.</strong>
+    Tambahkan kios pertama beserta kecamatan yang dilayaninya.
+    <div style="margin-top:14px"><a href="{{ url_for('ppts_baru') }}" class="btn">+ Tambah kios</a></div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

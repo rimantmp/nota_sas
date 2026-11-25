@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sistem Nota{% endblock %} - CV Subur Anugerah Sejahtera</title>
+<link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% set ep = request.endpoint %}
+<div class="shell">
+  <nav class="sidenav" aria-label="Menu utama">
+    <div class="brand">
+      <div class="mark">CV Subur Anugerah Sejahtera</div>
+      <div class="sub">Sistem Nota Pupuk Bersubsidi</div>
+    </div>
+    <div class="nav">
+      <span class="group-label">Nota</span>
+      <a href="{{ url_for('nota_baru') }}" {% if ep == 'nota_baru' %}class="active" aria-current="page"{% endif %}>Buat Nota</a>
+      <a href="{{ url_for('nota_riwayat') }}" {% if ep in ['nota_riwayat','nota_cetak'] %}class="active" aria-current="page"{% endif %}>Riwayat Nota</a>
+
+      <span class="group-label">Data master</span>
+      <a href="{{ url_for('pupuk_list') }}" {% if ep == 'pupuk_list' %}class="active" aria-current="page"{% endif %}>Jenis Pupuk</a>
+      <a href="{{ url_for('ppts_list') }}" {% if ep in ['ppts_list','ppts_baru','ppts_ubah','ppts_simpan'] %}class="active" aria-current="page"{% endif %}>PPTS / Kios</a>
+      <a href="{{ url_for('ekspeditur_list') }}" {% if ep == 'ekspeditur_list' %}class="active" aria-current="page"{% endif %}>Ekspeditur</a>
+
+      <span class="group-label">Lainnya</span>
+      <a href="{{ url_for('pengaturan') }}" {% if ep == 'pengaturan' %}class="active" aria-current="page"{% endif %}>Pengaturan</a>
+    </div>
+  </nav>
+
+  <main class="content">
+    <div class="page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="flash {{ category }}" role="status">
+          <span class="ikon" aria-hidden="true">{{ "✓" if category == "sukses" else "!" }}</span>
+          <span>{{ message }}</span>
+          <button type="button" class="tutup" aria-label="Tutup notifikasi">&times;</button>
+        </div>
+        {% endfor %}
+      {% endwith %}
+      {% block body %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener("click", function (e) {
+  var b = e.target.closest(".flash .tutup");
+  if (b) { b.closest(".flash").remove(); }
+});
+setTimeout(function () {
+  Array.prototype.forEach.call(document.querySelectorAll(".flash.sukses"), function (f) { f.remove(); });
+}, 4500);
+</script>
+</body>
+</html>

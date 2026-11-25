@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Ekspeditur{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>Ekspeditur</h1>
+    <p>Nama ekspeditur dan nomor polisi kendaraan yang tercetak di nota.</p>
+  </div>
+</div>
+
+<div class="split">
+  <div class="card flush">
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Nama</th><th>No. polisi</th><th class="w-act"><span hidden>Aksi</span></th></tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><b>{{ r.nama }}</b></td>
+            <td>{{ r.no_pol }}</td>
+            <td class="w-act">
+              <div class="row-actions">
+                <button type="button" class="btn secondary small btn-edit"
+                        data-id="{{ r.id }}" data-nama="{{ r.nama }}" data-nopol="{{ r.no_pol }}">Edit</button>
+                <form method="post" action="{{ url_for('ekspeditur_hapus', eid=r.id) }}"
+                      onsubmit="return confirm('Hapus ekspeditur {{ r.nama }}?');">
+                  <button type="submit" class="btn ghost small">Hapus</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty"><strong>Belum ada ekspeditur.</strong>Tambahkan lewat formulir di samping.</div>
+    {% endif %}
+  </div>
+
+  <div class="card aside">
+    <h2 id="form-judul">Tambah ekspeditur</h2>
+    <form method="post" action="{{ url_for('ekspeditur_simpan') }}">
+      <input type="hidden" name="id" id="f-id" value="">
+      <div class="field">
+        <label for="f-nama">Nama ekspeditur</label>
+        <input type="text" id="f-nama" name="nama" autocomplete="off" required>
+      </div>
+      <div class="field">
+        <label for="f-nopol">Nomor polisi</label>
+        <input type="text" id="f-nopol" name="no_pol" autocomplete="off" placeholder="mis. DP8179KE" required>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn" id="btn-simpan">Simpan</button>
+        <button type="button" class="btn ghost" id="batal" hidden>Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var fid=document.getElementById("f-id"), fn=document.getElementById("f-nama"),
+      fp=document.getElementById("f-nopol"), judul=document.getElementById("form-judul"),
+      batal=document.getElementById("batal"), simpan=document.getElementById("btn-simpan");
+  Array.prototype.forEach.call(document.querySelectorAll(".btn-edit"), function (b) {
+    b.addEventListener("click", function () {
+      fid.value=b.dataset.id; fn.value=b.dataset.nama; fp.value=b.dataset.nopol;
+      judul.textContent="Edit " + b.dataset.nama; simpan.textContent="Simpan perubahan"; batal.hidden=false; fn.focus();
+    });
+  });
+  batal.addEventListener("click", function () {
+    fid.value=""; fn.value=""; fp.value="";
+    judul.textContent="Tambah ekspeditur"; simpan.textContent="Simpan"; batal.hidden=true;
+  });
+})();
+</script>
+{% endblock %}

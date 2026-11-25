@@ -1,0 +1,8 @@
+# Lingkungan Python (dibuat oleh install.bat)
+.venv/
+__pycache__/
+*.pyc
+
+# Database lokal berisi data nota asli - jangan diunggah
+data/
+*.db

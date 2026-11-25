@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Riwayat Nota{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>Riwayat Nota</h1>
+    <p>Cari dan saring nota, lalu centang beberapa untuk dicetak sekaligus (2 nota per halaman A4).</p>
+  </div>
+  <a href="{{ url_for('nota_baru') }}" class="btn">Buat nota</a>
+</div>
+
+<div class="card">
+  <form method="get" action="{{ url_for('nota_riwayat') }}" role="search" class="filterbar">
+    <div class="f grow">
+      <label for="q">Cari</label>
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder="Nomor SO, kios, atau pupuk">
+    </div>
+    <div class="f">
+      <label for="dari">Dari tanggal</label>
+      <input type="date" id="dari" name="dari" value="{{ dari }}">
+    </div>
+    <div class="f">
+      <label for="sampai">Sampai tanggal</label>
+      <input type="date" id="sampai" name="sampai" value="{{ sampai }}">
+    </div>
+    <div class="f actions">
+      <button type="submit" class="btn secondary">Terapkan</button>
+      {% if q or dari or sampai %}<a href="{{ url_for('nota_riwayat') }}" class="btn ghost">Hapus filter</a>{% endif %}
+    </div>
+  </form>
+</div>
+
+<div class="card flush">
+  {% if notas %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th class="w-check"><input type="checkbox" id="pilihSemua" aria-label="Pilih semua nota"></th>
+          <th>Tanggal</th>
+          <th>Nomor SO</th>
+          <th>Kios / kecamatan</th>
+          <th>Pupuk</th>
+          <th class="num">Kuantum (ton)</th>
+          <th class="num">Jumlah (Rp)</th>
+          <th class="w-act"><span hidden>Aksi</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for n in notas %}
+        <tr>
+          <td><input type="checkbox" class="pilih" value="{{ n.id }}" aria-label="Pilih nota {{ n.nomor_so }}"></td>
+          <td>{{ n.tanggal_tampil }}</td>
+          <td><b>{{ n.nomor_so }}</b></td>
+          <td class="wrap" style="min-width:180px">{{ n.ppts_nama }}<span class="sub">{{ n.kecamatan }}</span></td>
+          <td>{{ n.pupuk_nama }}</td>
+          <td class="num">{{ "%g"|format(n.kuantum) }}</td>
+          <td class="num">{{ n.jumlah|rupiah }}</td>
+          <td class="w-act">
+            <div class="row-actions">
+              <a href="{{ url_for('nota_cetak', ids=n.id) }}" class="btn secondary small" target="_blank" rel="noopener">Cetak</a>
+              <form method="post" action="{{ url_for('nota_hapus', nota_id=n.id) }}"
+                    onsubmit="return confirm('Hapus nota {{ n.nomor_so }}? Tindakan ini tidak bisa dibatalkan.');">
+                <button type="submit" class="btn ghost small">Hapus</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    {% if q or dari or sampai %}
+      <strong>Tidak ada nota yang cocok dengan filter.</strong>
+      Ubah kata kunci atau rentang tanggal, atau <a href="{{ url_for('nota_riwayat') }}">hapus filter</a>.
+    {% else %}
+      <strong>Belum ada nota.</strong>
+      Nota yang disimpan akan muncul di sini. <a href="{{ url_for('nota_baru') }}">Buat nota pertama</a>.
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="actionbar">
+  <div class="summary">
+    <span class="pill"><b>{{ notas|length }}</b> nota</span>
+    <span class="pill">Total <b>Rp {{ total_jumlah|rupiah }}</b></span>
+    <span class="pill" id="info-pilih" hidden><b id="jml-pilih">0</b> dipilih</span>
+  </div>
+  <button type="button" class="btn" id="cetakTerpilih" disabled>Cetak terpilih</button>
+</div>
+
+<script>
+(function () {
+  var semua = document.getElementById("pilihSemua");
+  var btn = document.getElementById("cetakTerpilih");
+  var info = document.getElementById("info-pilih");
+  var jml = document.getElementById("jml-pilih");
+  function boxes() { return Array.prototype.slice.call(document.querySelectorAll(".pilih")); }
+  function terpilih() { return boxes().filter(function (c) { return c.checked; }).map(function (c) { return c.value; }); }
+  function perbarui() {
+    var ids = terpilih();
+    jml.textContent = ids.length;
+    info.hidden = ids.length === 0;
+    btn.disabled = ids.length === 0;
+    btn.textContent = ids.length ? "Cetak " + ids.length + " nota" : "Cetak terpilih";
+    if (semua) {
+      var n = boxes().length;
+      semua.checked = n > 0 && ids.length === n;
+      semua.indeterminate = ids.length > 0 && ids.length < n;
+    }
+    return ids;
+  }
+  boxes().forEach(function (c) { c.addEventListener("change", perbarui); });
+  if (semua) {
+    semua.addEventListener("change", function () {
+      boxes().forEach(function (c) { c.checked = semua.checked; });
+      perbarui();
+    });
+  }
+  btn.addEventListener("click", function () {
+    var ids = perbarui();
+    if (ids.length) { window.open("{{ url_for('nota_cetak') }}?ids=" + ids.join(","), "_blank"); }
+  });
+  perbarui();
+})();
+</script>
+{% endblock %}

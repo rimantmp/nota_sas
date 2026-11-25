@@ -1,0 +1,3 @@
+* text=auto
+# File batch Windows harus memakai akhir baris CRLF
+*.bat text eol=crlf

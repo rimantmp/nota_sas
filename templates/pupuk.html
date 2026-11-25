@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Jenis Pupuk{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>Jenis Pupuk</h1>
+    <p>Harga per ton dan subjudul nota (produsen) dipakai otomatis saat membuat nota.</p>
+  </div>
+</div>
+
+<div class="split">
+  <div class="card flush">
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Pupuk</th><th class="num">Harga / ton (Rp)</th><th class="w-act"><span hidden>Aksi</span></th></tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><b>{{ r.nama }}</b><span class="sub">{{ r.subjudul }}</span></td>
+            <td class="num">{{ r.harga_per_ton|rupiah }}</td>
+            <td class="w-act">
+              <div class="row-actions">
+                <button type="button" class="btn secondary small btn-edit"
+                        data-id="{{ r.id }}" data-nama="{{ r.nama }}" data-harga="{{ r.harga_per_ton }}"
+                        data-subjudul="{{ r.subjudul }}">Edit</button>
+                <form method="post" action="{{ url_for('pupuk_hapus', pid=r.id) }}"
+                      onsubmit="return confirm('Hapus pupuk {{ r.nama }}?');">
+                  <button type="submit" class="btn ghost small">Hapus</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty"><strong>Belum ada jenis pupuk.</strong>Tambahkan lewat formulir di samping.</div>
+    {% endif %}
+  </div>
+
+  <div class="card aside">
+    <h2 id="form-judul">Tambah pupuk</h2>
+    <form method="post" action="{{ url_for('pupuk_simpan') }}">
+      <input type="hidden" name="id" id="f-id" value="">
+      <div class="field">
+        <label for="f-nama">Nama pupuk</label>
+        <input type="text" id="f-nama" name="nama" autocomplete="off" placeholder="mis. UREA" required>
+      </div>
+      <div class="field">
+        <label for="f-harga">Harga per ton (Rp)</label>
+        <input type="number" id="f-harga" name="harga_per_ton" min="0" step="1" placeholder="mis. 1655760" required>
+      </div>
+      <div class="field">
+        <label for="f-subjudul">Subjudul nota</label>
+        <input type="text" id="f-subjudul" name="subjudul" autocomplete="off" placeholder="PENYALURAN PUPUK BERSUBSIDI PT. ...">
+        <div class="help">Kosongkan untuk memakai subjudul default di Pengaturan.</div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn" id="btn-simpan">Simpan</button>
+        <button type="button" class="btn ghost" id="batal" hidden>Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var fid=document.getElementById("f-id"), fn=document.getElementById("f-nama"),
+      fh=document.getElementById("f-harga"), fs=document.getElementById("f-subjudul"),
+      judul=document.getElementById("form-judul"), batal=document.getElementById("batal"),
+      simpan=document.getElementById("btn-simpan");
+  Array.prototype.forEach.call(document.querySelectorAll(".btn-edit"), function (b) {
+    b.addEventListener("click", function () {
+      fid.value=b.dataset.id; fn.value=b.dataset.nama; fh.value=b.dataset.harga; fs.value=b.dataset.subjudul;
+      judul.textContent="Edit " + b.dataset.nama; simpan.textContent="Simpan perubahan"; batal.hidden=false; fn.focus();
+    });
+  });
+  batal.addEventListener("click", function () {
+    fid.value=""; fn.value=""; fh.value=""; fs.value="";
+    judul.textContent="Tambah pupuk"; simpan.textContent="Simpan"; batal.hidden=true;
+  });
+})();
+</script>
+{% endblock %}

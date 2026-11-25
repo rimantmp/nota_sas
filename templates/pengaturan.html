@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Pengaturan{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <h1>Pengaturan</h1>
+    <p>Identitas perusahaan dan teks tetap yang tercetak di setiap nota. Perubahan hanya berlaku untuk nota yang dibuat setelahnya.</p>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('pengaturan') }}" style="max-width:760px">
+  <div class="card">
+    <h2>Identitas perusahaan</h2>
+    <div class="field">
+      <label for="nama_perusahaan">Nama perusahaan</label>
+      <input type="text" id="nama_perusahaan" name="nama_perusahaan" value="{{ p.nama_perusahaan }}" required>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="alamat">Alamat</label>
+        <input type="text" id="alamat" name="alamat" value="{{ p.alamat }}" required>
+      </div>
+      <div class="field">
+        <label for="kota">Kota / kabupaten</label>
+        <input type="text" id="kota" name="kota" value="{{ p.kota }}" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Teks nota</h2>
+    <div class="field">
+      <label for="judul_dokumen">Judul dokumen</label>
+      <input type="text" id="judul_dokumen" name="judul_dokumen" value="{{ p.judul_dokumen }}" required>
+    </div>
+    <div class="field">
+      <label for="subjudul">Subjudul default</label>
+      <input type="text" id="subjudul" name="subjudul" value="{{ p.subjudul }}" required>
+      <div class="help">Dipakai bila pupuk baru tidak diberi subjudul. Subjudul utama diatur per pupuk di menu Jenis Pupuk.</div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="label_pud">Label PUD</label>
+        <input type="text" id="label_pud" name="label_pud" value="{{ p.label_pud }}" required>
+      </div>
+      <div class="field">
+        <label for="nama_pud">Penanda tangan PUD</label>
+        <input type="text" id="nama_pud" name="nama_pud" value="{{ p.nama_pud }}" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" style="margin-top:16px">
+    <button type="submit" class="btn">Simpan pengaturan</button>
+  </div>
+</form>
+{% endblock %}
